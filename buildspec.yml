@@ -13,4 +13,4 @@ phases:
       - echo Build finalizado em `date`
 artifacts:
     files:
-      - build/**/*
+      - public/**/*
