@@ -504,8 +504,8 @@
                   $url = "http://169.254.169.254/latest/meta-data/instance-id";
                   $instance_id = file_get_contents($url);
                   $public_ip = file_get_contents($ip);
-                  echo "  ID da instância: <b>" . $instance_id . "</b><br/></font>  ";
-                  echo "  IP Publico da instância: <b>" . $public_ip . "</b><br/></font> ";
+                  echo "  ID da instância: <b>" . $instance_id . "</b><br/></font>";
+                  echo "  IP Publico da instância: <b>" . $public_ip . "</b><br/></font>";
                 ?>
               </h3>
             </div>
