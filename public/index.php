@@ -7,7 +7,7 @@
         $firstLine = fgets($fileControl);
         fclose($fileControl);
         
-        if ($firstLine == "stop")
+        if ($firstLine == "stop" or $firstLine == "")
           $currentAction = "stopped";
         else
           $currentAction = "running";
