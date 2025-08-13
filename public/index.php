@@ -1,37 +1,50 @@
 <?php
-// Nome do arquivo de flag para parar o loop
-$flagFile = sys_get_temp_dir() . '/cpu_stop.flag';
+  // Nome do arquivo de flag para parar o loop
+  $flagFile = sys_get_temp_dir() . '/cpu_stop.flag';
 
-// Ao clicar em iniciar
-if (isset($_GET['action']) && $_GET['action'] === 'start') {
-  if (file_exists($flagFile)) {
-    unlink($flagFile); // Remove flag se existir
-  }
-  // Inicia este mesmo script em segundo plano com parâmetro "worker"
-  exec('php ' . __FILE__ . ' worker > /dev/null 2>&1 &');
-  $message = "Carga de CPU iniciada.";
-}
-
-// Ao clicar em parar
-if (isset($_GET['action']) && $_GET['action'] === 'stop') {
-  file_put_contents($flagFile, 'stop');
-  $message = "Carga de CPU interrompida.";
-}
-
-// Caso seja chamado com parâmetro "worker", inicia loop pesado
-if (isset($argv[1]) && $argv[1] === 'worker') {
-  while (true) {
-    $x = 0;
-    for ($i = 0; $i < 1000000; $i++) {
-      $x += sqrt($i); // Processamento pesado
-    }
+  // Ao clicar em iniciar
+  if (isset($_GET['action']) && $_GET['action'] === 'start') {
     if (file_exists($flagFile)) {
-      break; // Para quando flag existir
+      unlink($flagFile); // Remove flag se existir
     }
+    // Inicia este mesmo script em segundo plano com parâmetro "worker"
+    exec('php ' . __FILE__ . ' worker > /dev/null 2>&1 &');
+    $message = "Carga de CPU iniciada.";
   }
-  exit;
-}
 
+  // Ao clicar em parar
+  if (isset($_GET['action']) && $_GET['action'] === 'stop') {
+    file_put_contents($flagFile, 'stop');
+    $message = "Carga de CPU interrompida.";
+  }
+
+  // Caso seja chamado com parâmetro "worker", inicia loop pesado
+  if (isset($argv[1]) && $argv[1] === 'worker') {
+    while (true) {
+      $x = 0;
+      for ($i = 0; $i < 1000000; $i++) {
+        $x += sqrt($i); // Processamento pesado
+      }
+      if (file_exists($flagFile)) {
+        break; // Para quando flag existir
+      }
+    }
+    exit;
+  }
+
+  function getServerLoad() {
+    $stat1 = file('/proc/stat');
+    sleep(1);
+    $stat2 = file('/proc/stat');
+    $info1 = explode(" ", preg_replace("!cpu +!", "", $stat1[0]));
+    $info2 = explode(" ", preg_replace("!cpu +!", "", $stat2[0]));
+
+    $difTotal = array_sum($info2) - array_sum($info1);
+    $difIdle = $info2[3] - $info1[3];
+
+    $cpu = (100 * ($difTotal - $difIdle)) / $difTotal;
+    return round($cpu, 2);
+  }
 ?>
 <!DOCTYPE html>
 <html>
@@ -474,14 +487,15 @@ if (isset($argv[1]) && $argv[1] === 'worker') {
             <h3
               class="mt-2 text-lg text-center leading-tight font-bold md:text-4xl md:leading-tight lg:text-xl lg:leading-tight bg-clip-text bg-linear-to-r from-violet-600 to-fuchsia-700 text-transparent">
               <?php
-              $ip = "http://169.254.169.254/latest/meta-data/public-ipv4";
-              $url = "http://169.254.169.254/latest/meta-data/instance-id";
-              #$instance_id = 1;
-              #$public_ip = "0.0.0.0";
-              $instance_id = file_get_contents($url);
-              $public_ip = file_get_contents($ip);
-              echo "  ID instância: <b>" . $instance_id . "</b><br/></font>";
-              echo "  IP Publico: <b>" . $public_ip . "</b><br/></font>";
+                $ip = "http://169.254.169.254/latest/meta-data/public-ipv4";
+                $url = "http://169.254.169.254/latest/meta-data/instance-id";
+                #$instance_id = 1;
+                #$public_ip = "0.0.0.0";
+                $instance_id = file_get_contents($url);
+                $public_ip = file_get_contents($ip);
+                echo "ID instância: <b>" . $instance_id . "</b><br/>";
+                echo "IP Publico: <b>" . $public_ip . "</b><br/>";
+                echo "Uso de CPU: <b> " . getServerLoad() . "% </b><br/>";
               ?>
             </h3>
 
@@ -494,7 +508,7 @@ if (isset($argv[1]) && $argv[1] === 'worker') {
               <strong>'. $message.'</strong></p>'; 
             ?>
             <form class="pt-6" method="get">
-              <button class="cursor-pointer bg-blue-500 text-white py-2 px-4 rounded shadow-md hover:bg-blue-600" type="submit" name="action" value="start">Iniciar CPU 100%</button>
+              <button class="cursor-pointer bg-blue-500 text-white py-2 px-4 rounded shadow-md hover:bg-blue-600" type="submit" name="action" value="start">Iniciar CPU</button>
               <button class="cursor-pointer bg-blue-500 text-white py-2 px-4 rounded shadow-md hover:bg-blue-600" type="submit" name="action" value="stop">Parar</button>
             </form>
             
