@@ -2,20 +2,37 @@
   // Nome do arquivo de flag para parar o loop
   $flagFile = sys_get_temp_dir() . '/cpu_stop.flag';
 
+  if (file_exists($flagFile)) {
+        $fileControl = fopen($flagFile, "r");
+        $firstLine = fgets($fileControl);
+        fclose($fileControl);
+        
+        if ($firstLine == "stop")
+          $currentAction = "stopped";
+        else
+          $currentAction = "running";
+  } else {
+    file_put_contents($flagFile, '');
+    $currentAction = "stopped";
+  }
+
   // Ao clicar em iniciar
   if (isset($_GET['action']) && $_GET['action'] === 'start') {
     if (file_exists($flagFile)) {
-      unlink($flagFile); // Remove flag se existir
+      #unlink($flagFile); // Remove flag se existir
+      file_put_contents($flagFile, 'run');
     }
     // Inicia este mesmo script em segundo plano com parâmetro "worker"
     exec('php ' . __FILE__ . ' worker > /dev/null 2>&1 &');
     $message = "Carga de CPU iniciada.";
+    header("Location: ./index.php");
   }
 
   // Ao clicar em parar
   if (isset($_GET['action']) && $_GET['action'] === 'stop') {
     file_put_contents($flagFile, 'stop');
     $message = "Carga de CPU interrompida.";
+    header("Location: ./index.php");
   }
 
   // Caso seja chamado com parâmetro "worker", inicia loop pesado
@@ -26,7 +43,12 @@
         $x += sqrt($i); // Processamento pesado
       }
       if (file_exists($flagFile)) {
-        break; // Para quando flag existir
+        $fileControl = fopen($flagFile, "r");
+        $firstLine = fgets($fileControl);
+        fclose($fileControl);
+        if ($firstLine == "stop") {
+          break;
+        }
       }
     }
     exit;
@@ -508,8 +530,12 @@
               <strong>'. $message.'</strong></p>'; 
             ?>
             <form class="pt-6" method="get">
-              <button class="cursor-pointer bg-blue-500 text-white py-2 px-4 rounded shadow-md hover:bg-blue-600" type="submit" name="action" value="start">Iniciar CPU</button>
-              <button class="cursor-pointer bg-blue-500 text-white py-2 px-4 rounded shadow-md hover:bg-blue-600" type="submit" name="action" value="stop">Parar</button>
+              <?php
+                if ($currentAction == "stopped")
+                  echo '<button class="cursor-pointer bg-blue-500 text-white py-2 px-4 rounded shadow-md hover:bg-blue-600" type="submit" name="action" value="start">Iniciar CPU</button>';
+                else
+                  echo '<button class="cursor-pointer bg-blue-500 text-white py-2 px-4 rounded shadow-md hover:bg-blue-600" type="submit" name="action" value="stop">Parar</button>';
+              ?>
             </form>
             
           </div>
