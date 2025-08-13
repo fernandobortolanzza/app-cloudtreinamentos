@@ -476,10 +476,10 @@ if (isset($argv[1]) && $argv[1] === 'worker') {
               <?php
               $ip = "http://169.254.169.254/latest/meta-data/public-ipv4";
               $url = "http://169.254.169.254/latest/meta-data/instance-id";
-              $instance_id = 1;
-              $public_ip = "0.0.0.0";
-              #$instance_id = file_get_contents($url);
-              #$public_ip = file_get_contents($ip);
+              #$instance_id = 1;
+              #$public_ip = "0.0.0.0";
+              $instance_id = file_get_contents($url);
+              $public_ip = file_get_contents($ip);
               echo "  ID instância: <b>" . $instance_id . "</b><br/></font>";
               echo "  IP Publico: <b>" . $public_ip . "</b><br/></font>";
               ?>
